@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="black">#FF000000</color>
+    <color name="white">#FFFFFFFF</color>
+    <color name="gray">#6A6A6A</color>
+    <color name="red">#ff0000</color>
+
+    //nav_bar
+    <color name="primary">#081165</color>
+    <color name="secondary">#7BB328</color>
+
+
+    //login
+    <color name="black_alpha">#98000000</color>
+
+    //item
+    <color name="primary_color_item">#686a7b</color>
+    <color name="contrast_item">#000000</color>
+
+    //About
+    <color name="link_color">#0000FF</color>
+
+    //Rondines
+    <color name="ini_rondin">#23be31</color>
+    <color name="fin_rondin">#e81f1f</color>
+
+</resources>

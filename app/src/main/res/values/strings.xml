@@ -1,0 +1,96 @@
+<resources>
+    <string name="app_name">Acceso Vehicular</string>
+
+    //Login
+    <string name="login_user">Usuario</string>
+    <string name="login_password">Contraseña</string>
+    <string name="login_content_desc_logo">Logo de la empresa</string>
+    <string name="login_content_desc_user">Logo usuario</string>
+    <string name="login_content_desc_password">Logo contraseña</string>
+    <string name="login_button">Ingresar</string>
+    <string name="remind_user">Recordar usuario</string>
+
+    //Nav Bar
+    <string name="home_nav_bar">Home</string>
+    <string name="list_of_records_nav_bar">Registros</string>
+    <string name="sync_nav_bar">Sincronización</string>
+    <string name="about_nav_bar">Acerca de...</string>
+    <string name="logout_nav_bar">Salir</string>
+    <string name="title_nav_bar">Agroberries México</string>
+    <string name="subtitle_nav_bar">AgroAccess</string>
+
+    //Main Graph
+    <string name="graph_driver_data_fragment">Datos del ingreso</string>
+    <string name="list_of_records_fragment">Lista de Registros</string>
+    <string name="graph_sync_fragment">Sincronizacion</string>
+    <string name="graph_about_fragment">Acerca De...</string>
+
+    //Driver Data Fragment
+    <string name="date_driver_data_fragment">Fecha: </string>
+    <string name="name_driver_data_fragment">Nombre del chofer</string>
+    <string name="companion_driver_data_fragment">Nombre del acompañante</string>
+    <string name="company_driver_data_fragment">Empresa</string>
+    <string name="plate_driver_data_fragment">Placas del vehiculo</string>
+    <string name="reason_for_visit_driver_data_fragment">Motivo de visita</string>
+    <string name="check_in_time_driver_data_fragment">Hora de entrada</string>
+    <string name="check_out_time_driver_data_fragment">Hora de salida</string>
+    <string name="confirm_driver_data_fragment">Confirmar</string>
+    <string name="date_format_driver_data_fragment">dd/MM/yyyy</string>
+
+    //List Record Detail
+    <string name="number_record_detail">Registro:</string>
+    <string name="date_driver_record_detail">Fecha: </string>
+    <string name="name_driver_record_detail">Nombre del chofer:</string>
+    <string name="companion_driver_record_detail">Nombre del acompañante:</string>
+    <string name="company_driver_record_detail">Empresa:</string>
+    <string name="plate_driver_record_detail">Placas del vehiculo:</string>
+    <string name="reason_for_visit_driver_record_detail">Motivo de visita:</string>
+    <string name="check_in_time_driver_record_detail">Hora de entrada:</string>
+    <string name="check_out_time_driver_record_detail">Hora de salida:</string>
+    <string name="check_out_button_time_driver_record_detail">Hora de salida</string>
+    <string name="user_driver_record_detail">Usuario:</string>
+    <string name="is_synced_driver_record_detail">Registro sincronizado:</string>
+    <string name="confirm_driver_record_detail">Guardar</string>
+
+    //Sync Fragment
+    <string name="download_data_sync_fragment">Descargar Catalogos</string>
+    <string name="upload_data_sync_fragment">Enviar Catalogos</string>
+
+    //About Fragment
+    <string name="developed_by_about_fragment">Desarrollado por el equipo de T.I. Agroberries México</string>
+    <string name="doubts_about_fragment">¿Tienes dudas?</string>
+    <string name="contact_us_about_fragment">Contactanos</string>
+    <string name="mail1_about_fragment">aorozco@agroberries.mx</string>
+    <string name="mail2_about_fragment">programador@agroberries.mx</string>
+    <string name="version_about_fragment">Version: 3.0</string>
+    <string name="privacy_policies_about_fragment"><a href="https://agroberries.mx/agroweb/PrivacyPolicy/index.html">Políticas de privacidad</a></string>
+    <string name="title_activity_login">LoginActivity</string>
+
+    //Privacy Policy
+    <string name="location_and_other_policy_activity">Sobre tu ubicación y otros permisos</string>
+    <string name="like_describe_policy_activity">Como se describe en nuestra</string>
+    <string name="privacy_policy_activity">Politica de Privacidad.</string>
+    <string name="description_policy_activity">Si otorgas los permisos solicitados por nuestra aplicación (Agroberries Acceso Vehicular MX) a mostrarse a continuación, usamos la ubicación de tu dispositivo como dato recopilatorio, la cual forma parte de la información necesaria para realizar las capturas de nuestra app (Agroberries Acceso Vehicular MX) para muestra y uso de los mismos.</string>
+    <string name="description2_policy_activity">Tambien podemos usar y compartir esta información con socios confiables para brindarte nuestros servicios y mejorarlos.</string>
+    <string name="description3_policy_activity">Independientemente de que permitas o no el acceso a tu ubicación, puedes continuar utilizando nuestra app (Agroberries Acceso Vehicular MX) de manera limitada.
+                                         Tenga en cuenta que denegar el acceso a la ubicación de su dispositivo cuando se le solicite no impide el acceso a la información de ubicación general incrustada en su dirección IP.
+                                         Puedes cambiar los permisos otorgados en esta aplicación en cualquier momento.</string>
+    <string name="rights_policy_activity">Todos los derechos reservados © Agroberries México 2024-2026</string>
+
+    //Rondines
+    <string name="opcRondines">Rondines</string>
+    <string name="iniciarRondin">Iniciar Rondín</string>
+    <string name="scanNextLocation">Escanear Ubicación</string>
+    <string name="finRondin">Finalizar Rondín</string>
+    <string name="rondin_terminado_exito">Rondín terminado con éxito</string>
+    <string name="rondin_no_iniciado">No hay rondín activo para finalizar.</string>
+    <string name="rondin_iniciado">Rondín iniciado. ¡Escanea ubicaciones!</string>
+    <string name="letreroUbicaciones">Ubicaciones de Rondín:</string>
+    <string name="usuarioRondin">Escribe o escanea Usuario:</string>
+
+    <string name="messageRondin">Enviar Ubicaciones de Rondín</string>
+    <string name="contador">Pendientes de enviar:</string>
+
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
+</resources>

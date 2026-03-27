@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    app:startDestination="@+id/navDriverData"
+    android:id="@+id/main_graph">
+
+    <fragment
+        android:id="@+id/navDriverData"
+        android:name="com.AgroberriesMX.accesovehicular.ui.driverdata.DriverDataFragment"
+        android:label="@string/graph_driver_data_fragment"
+        tools:layout="@layout/fragment_driver_data" />
+
+    <fragment
+        android:id="@+id/navListOfRecords"
+        android:name="com.AgroberriesMX.accesovehicular.ui.list.ListRecordsFragment"
+        android:label="@string/list_of_records_fragment"
+        tools:layout="@layout/fragment_list_records" >
+        <action
+            android:id="@+id/action_navListOfRecords_to_listRecordDetailActivity"
+            app:destination="@id/listRecordDetailActivity" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/navSync"
+        android:name="com.AgroberriesMX.accesovehicular.ui.sync.SyncFragment"
+        android:label="@string/graph_sync_fragment"
+        tools:layout="@layout/fragment_sync" />
+    <!--//Ricardo Dimas - 15/06/2026 Rondines-->
+    <fragment
+        android:id="@+id/navRondin"
+        android:name="com.AgroberriesMX.accesovehicular.ui.rondin.RondinFragment"
+        android:label="@string/opcRondines"
+        tools:layout="@layout/fragment_rondin" />
+    <fragment
+        android:id="@+id/navAbout"
+        android:name="com.AgroberriesMX.accesovehicular.ui.about.AboutFragment"
+        android:label="@string/graph_about_fragment"
+        tools:layout="@layout/fragment_about" />
+    <activity
+        android:id="@+id/listRecordDetailActivity"
+        android:name="com.AgroberriesMX.accesovehicular.ui.recordsdetail.ListRecordDetailActivity"
+        android:label="activity_list_record_detail"
+        tools:layout="@layout/activity_list_record_detail">
+        <argument
+            android:name="type"
+            app:argType="com.AgroberriesMX.accesovehicular.domain.model.RecordModel"/>
+    </activity>
+
+
+</navigation>
