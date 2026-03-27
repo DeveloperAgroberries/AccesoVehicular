@@ -73,6 +73,7 @@ class SyncViewModel @Inject constructor(
 
     @RequiresApi(Build.VERSION_CODES.O)
     fun upload(){
+        Log.e("Prueba", "probando push")
         viewModelScope.launch{
             _state.value = SyncState.Loading
             try{
