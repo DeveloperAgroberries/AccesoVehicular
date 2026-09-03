@@ -2,6 +2,7 @@ package com.AgroberriesMX.accesovehicular.data.local;
 
 import android.content.Context;
 import com.AgroberriesMX.accesovehicular.data.RecordsRepositoryImpl
+import com.AgroberriesMX.accesovehicular.data.network.AccesoVehicularApiService
 import com.AgroberriesMX.accesovehicular.domain.RecordsRepository
 import javax.inject.Singleton;
 import dagger.Module;
@@ -27,7 +28,10 @@ object DatabaseModule {
 
     @Provides
     @Singleton
-    fun provideRecordsRepository(localDBService: AccesoVehicularLocalDBService): RecordsRepository {
-        return RecordsRepositoryImpl(localDBService)
+    fun provideRecordsRepository(
+        localDBService: AccesoVehicularLocalDBService,
+        apiService: AccesoVehicularApiService // INYECTAR SERVICIO DE RED AQUÍ
+    ): RecordsRepository {
+        return RecordsRepositoryImpl(localDBService, apiService)
     }
 }

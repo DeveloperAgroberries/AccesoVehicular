@@ -352,19 +352,34 @@ class RondinFragment : Fragment() {
 
     // --- FUNCIONES DE UBICACIÓN ACTUALIZADAS ---
     // Esta función ahora solo verifica permisos y, si están OK, inicia las actualizaciones
+    // --- FUNCIONES DE UBICACIÓN ACTUALIZADAS ---
     private fun checkLocationPermissionsAndGetLocation() {
         val hasFineLocation = ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED
         val hasCoarseLocation = ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED
 
         if (hasFineLocation || hasCoarseLocation) {
-            startLocationUpdates() // <-- Inicia la solicitud de ubicación
+            startLocationUpdates()
         } else {
-            requestLocationPermissionLauncher.launch(
-                arrayOf(
-                    Manifest.permission.ACCESS_FINE_LOCATION,
-                    Manifest.permission.ACCESS_COARSE_LOCATION
-                )
-            )
+            // --- INICIO DE CORRECCIÓN PARA GOOGLE PLAY ---
+            androidx.appcompat.app.AlertDialog.Builder(requireContext())
+                .setTitle("Uso de la ubicación")
+                .setMessage("Acceso Vehicular recopila datos de ubicación para validar que el registro del rondín se realice en el punto de control escaneado. Esto garantiza la integridad de los recorridos de vigilancia.")
+                .setPositiveButton("Aceptar") { _, _ ->
+                    // Solo pedimos el permiso si el usuario acepta este mensaje
+                    requestLocationPermissionLauncher.launch(
+                        arrayOf(
+                            Manifest.permission.ACCESS_FINE_LOCATION,
+                            Manifest.permission.ACCESS_COARSE_LOCATION
+                        )
+                    )
+                }
+                .setNegativeButton("No, gracias") { dialog, _ ->
+                    dialog.dismiss()
+                    Toast.makeText(requireContext(), "No se puede registrar el punto sin ubicación GPS", Toast.LENGTH_LONG).show()
+                }
+                .setCancelable(false) // Obliga al usuario a elegir una opción
+                .show()
+            // --- FIN DE CORRECCIÓN ---
         }
     }
 

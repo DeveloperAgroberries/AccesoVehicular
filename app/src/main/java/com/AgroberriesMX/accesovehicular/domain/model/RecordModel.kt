@@ -16,5 +16,6 @@ data class RecordModel(
     var dHrsalidaInv: String,
     val cCodigoUsu: String,
     val cMovimientoInv: String,
-    var isSynced: Int
+    var isSynced: Int,
+    val nKilometraje: Int = 0 // <-- NUEVO CAMPO (con valor 0 por defecto)
 ) : Parcelable

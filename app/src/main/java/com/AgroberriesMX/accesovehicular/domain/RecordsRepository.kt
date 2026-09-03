@@ -1,5 +1,6 @@
 package com.AgroberriesMX.accesovehicular.domain
 
+import com.AgroberriesMX.accesovehicular.domain.model.CompanyVehicleModel
 import com.AgroberriesMX.accesovehicular.domain.model.RecordModel
 import com.AgroberriesMX.accesovehicular.domain.model.RondinModel
 
@@ -19,4 +20,6 @@ interface RecordsRepository {
     suspend fun updateRondines(record: RondinModel): Int?
     //suspend fun getUnsynchronizedRondines(): List<RondinModel>?
     //suspend fun uploadRondin(record: RondinModel): Int?
+    suspend fun getCompanyVehicles(): List<CompanyVehicleModel>?
+    suspend fun getCompanyVehicleByNumEcon(numEcon: String): CompanyVehicleModel?
 }

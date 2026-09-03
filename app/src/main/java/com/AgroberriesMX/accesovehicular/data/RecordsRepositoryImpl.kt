@@ -1,16 +1,19 @@
 package com.AgroberriesMX.accesovehicular.data
 
 import com.AgroberriesMX.accesovehicular.data.local.AccesoVehicularLocalDBService
+import com.AgroberriesMX.accesovehicular.data.network.AccesoVehicularApiService
 import com.AgroberriesMX.accesovehicular.domain.RecordsRepository
+import com.AgroberriesMX.accesovehicular.domain.model.CompanyVehicleModel
 import com.AgroberriesMX.accesovehicular.domain.model.RecordModel
 import com.AgroberriesMX.accesovehicular.domain.model.RondinModel
 import javax.inject.Inject
 
 class RecordsRepositoryImpl @Inject constructor(
-    private val localDBService: AccesoVehicularLocalDBService
+    private val localDBService: AccesoVehicularLocalDBService,
+    private val apiService: AccesoVehicularApiService
 ) : RecordsRepository {
 
-    //Metodos para la base de datos local(ROOM)
+    // Metodos para la base de datos local (ROOM)
     override suspend fun getAllVehicles(): List<RecordModel> {
         return localDBService.getAllVehicles()
     }
@@ -47,7 +50,8 @@ class RecordsRepositoryImpl @Inject constructor(
             record.dHrsalidaInv,
             record.cCodigoUsu,
             record.cMovimientoInv,
-            record.isSynced
+            record.isSynced,
+            record.nKilometraje // <-- AGREGADO AQUÍ
         )
     }
 
@@ -64,10 +68,12 @@ class RecordsRepositoryImpl @Inject constructor(
             record.dHrsalidaInv,
             record.cCodigoUsu,
             record.cMovimientoInv,
-            record.isSynced
+            record.isSynced,
+            record.nKilometraje // <-- AGREGADO AQUÍ
         )
     }
-    //RICARDO DIMAS
+
+    // RICARDO DIMAS
     override suspend fun listUnsynchronizedRondines(): List<RondinModel>? {
         return localDBService.listUnsynchronizedRondines()
     }
@@ -81,7 +87,31 @@ class RecordsRepositoryImpl @Inject constructor(
             rondin.longGpsRon,
             rondin.nomUbicacionRon,
             rondin.usuModRon,
-            rondin.isSynced,
+            rondin.isSynced
         )
+    }
+
+    override suspend fun getCompanyVehicles(): List<CompanyVehicleModel>? {
+        return try {
+            val response = apiService.listVehiculosEmpresa()
+            if (response.isSuccessful && response.body() != null) {
+                val vehiclesList = response.body()!!.vehicles.map { it.toDomain() }
+
+                // GUARDA LA LISTA EN SQLITE AL DESCARGARLA
+                if (vehiclesList.isNotEmpty()) {
+                    localDBService.insertOrUpdateCompanyVehicles(vehiclesList)
+                }
+
+                vehiclesList
+            } else {
+                null
+            }
+        } catch (e: Exception) {
+            null
+        }
+    }
+
+    override suspend fun getCompanyVehicleByNumEcon(numEcon: String): CompanyVehicleModel? {
+        return localDBService.getCompanyVehicleByNumEcon(numEcon)
     }
 }

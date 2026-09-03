@@ -9,14 +9,14 @@ plugins {
 
 android {
     namespace = "com.AgroberriesMX.accesovehicular"
-    compileSdk = 35
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "com.AgroberriesMX.accesovehicular"
         //minSdk = 21
         minSdk = 24
-        targetSdk = 35
-        versionCode = 17
+        targetSdk = 36
+        versionCode = 19
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
@@ -32,15 +32,15 @@ android {
             )
 
             resValue("string", "AgroberriesMX", "Agroberries AccesoVehicular MX")
-            buildConfigField("String", "BASE_URL", "\"http://54.165.41.23:5053/api/AgroAccessApp/\"")
-            //buildConfigField("String", "BASE_URL", "\"http://192.168.1.37:5011/api/AgroAccessApp/\"")
+            //buildConfigField("String", "BASE_URL", "\"http://54.165.41.23:5053/api/AgroAccessApp/\"")
+            buildConfigField("String", "BASE_URL", "\"http://192.168.50.120:5011/api/AgroAccessApp/\"")
         }
 
         getByName("debug"){
             isDebuggable = true
             resValue("string", "AgroberriesMX", "[DEBUG]Agroberries AccesoVehicular MX")
-            buildConfigField("String", "BASE_URL", "\"http://54.165.41.23:5053/api/AgroAccessApp/\"")
-            //buildConfigField("String", "BASE_URL", "\"http://192.168.1.37:5011/api/AgroAccessApp/\"")
+            //buildConfigField("String", "BASE_URL", "\"http://54.165.41.23:5053/api/AgroAccessApp/\"")
+            buildConfigField("String", "BASE_URL", "\"http://192.168.50.120:5011/api/AgroAccessApp/\"")
         }
     }
     compileOptions {

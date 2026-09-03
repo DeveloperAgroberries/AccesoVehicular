@@ -7,6 +7,7 @@ import android.database.sqlite.SQLiteOpenHelper
 import android.os.Build
 import android.util.Log
 import androidx.annotation.RequiresApi
+import com.AgroberriesMX.accesovehicular.domain.model.CompanyVehicleModel
 import com.AgroberriesMX.accesovehicular.domain.model.LoginModel
 import com.AgroberriesMX.accesovehicular.domain.model.RecordModel
 import com.AgroberriesMX.accesovehicular.domain.model.RondinLocation // <-- ¡Añade esta línea!
@@ -18,9 +19,9 @@ import java.time.format.DateTimeFormatter
 
 
 class DatabaseHelper(context: Context):SQLiteOpenHelper(context, DATABASE_NAME, null, DATABASE_VERSION) {
-    companion object{
+    companion object {
         private const val DATABASE_NAME = "agroaccess.db"
-        private const val DATABASE_VERSION = 7 //subimos la version por que vamos a modificar la base de datos - Ricardo Dimas 16/06/2025
+        private const val DATABASE_VERSION = 9 // Incrementamos a versión 8
 
         private const val CREATE_TABLE_RONDIN_LOCATIONS = """
             CREATE TABLE z_segRondines (
@@ -57,7 +58,18 @@ class DatabaseHelper(context: Context):SQLiteOpenHelper(context, DATABASE_NAME, 
                 dHrsalidaInv TEXT,
                 cCodigoUsu TEXT,
                 cMovimientoInv TEXT,
-                isSynced INTEGER DEFAULT 0
+                isSynced INTEGER DEFAULT 0,
+                nKilometraje INTEGER DEFAULT 0
+            )
+        """
+
+        // Nueva tabla para los vehículos de la empresa obtenidos de la API
+        private const val CREATE_TABLE_COMPANY_VEHICLES = """
+            CREATE TABLE afiactivo_company (
+                cNumeconAfi TEXT PRIMARY KEY,
+                vNombreAfc TEXT,
+                vNumlicenciaAfc TEXT,
+                vPlacasAfi TEXT
             )
         """
     }
@@ -66,18 +78,102 @@ class DatabaseHelper(context: Context):SQLiteOpenHelper(context, DATABASE_NAME, 
         db.execSQL(CREATE_TABLE_LOGINS)
         db.execSQL(CREATE_TABLE_VEHICLES)
         db.execSQL(CREATE_TABLE_RONDIN_LOCATIONS)
+        db.execSQL(CREATE_TABLE_COMPANY_VEHICLES)
     }
 
     private fun dropTables(db: SQLiteDatabase){
         db.execSQL("DROP TABLE IF EXISTS genlogin")
         db.execSQL("DROP TABLE IF EXISTS z_geningresovehiculo")
         db.execSQL("DROP TABLE IF EXISTS z_segRondines")
+        db.execSQL("DROP TABLE IF EXISTS afiactivo_company")
     }
 
     override fun onUpgrade(db: SQLiteDatabase, oldVersion: Int, newVersion: Int) {
-        dropTables(db)
+        if (oldVersion < 8) {
+            db.execSQL(CREATE_TABLE_COMPANY_VEHICLES)
+        } else {
+            dropTables(db)
+            onCreate(db)
+        }
+    }
 
-        onCreate(db)
+    // --- NUEVAS FUNCIONES PARA LOS VEHÍCULOS DE LA EMPRESA ---
+
+    /**
+     * Guarda o actualiza la lista masiva de vehículos provenientes del endpoint ListVehiculosEmpresa.
+     */
+    fun insertOrUpdateCompanyVehicles(vehicles: List<CompanyVehicleModel>) {
+        val db = this.writableDatabase
+        db.beginTransaction()
+        try {
+            for (vehicle in vehicles) {
+                val cleanNumEcon = vehicle.cNumeconAfi.trim()
+                val values = ContentValues().apply {
+                    put("cNumeconAfi", cleanNumEcon)
+                    put("vNombreAfc", vehicle.vNombreAfc?.trim())
+                    put("vNumlicenciaAfc", vehicle.vNumlicenciaAfc?.trim())
+                    put("vPlacasAfi", vehicle.vPlacasAfi?.trim())
+                }
+
+                // Realiza un Insert o Replace si ya existe la llave primaria cNumeconAfi
+                db.insertWithOnConflict(
+                    "afiactivo_company",
+                    null,
+                    values,
+                    SQLiteDatabase.CONFLICT_REPLACE
+                )
+            }
+            db.setTransactionSuccessful()
+        } catch (e: Exception) {
+            Log.e("DBError", "Error al guardar vehículos de la empresa: ${e.message}")
+        } finally {
+            db.endTransaction()
+            db.close()
+        }
+    }
+
+    /**
+     * Busca los datos del vehículo por su cNumeconAfi (ej: "CAM-00229")
+     */
+    fun getCompanyVehicleByNumEcon(numEcon: String): CompanyVehicleModel? {
+        val db = this.readableDatabase
+        val cleanNumEcon = numEcon.trim()
+
+        // 1. IMPRIMIR TODOS LOS REGISTROS PARA DEPURACIÓN EN LOGCAT
+        val debugCursor = db.rawQuery("SELECT * FROM afiactivo_company", null)
+        Log.d("DEBUG_SQLITE", "Total de registros en afiactivo_company: ${debugCursor.count}")
+
+        if (debugCursor.moveToFirst()) {
+            do {
+                val numCol = debugCursor.getColumnIndex("cNumeconAfi")
+                val valNumEcon = if (numCol != -1) debugCursor.getString(numCol) else "N/A"
+                Log.d("DEBUG_SQLITE", "Registro en BD -> cNumeconAfi: '$valNumEcon'")
+            } while (debugCursor.moveToNext())
+        }
+        debugCursor.close()
+
+        // 2. BUSCAR EL VEHÍCULO SOLICITADO
+        val query = "SELECT * FROM afiactivo_company WHERE TRIM(cNumeconAfi) = ? COLLATE NOCASE LIMIT 1"
+        val cursor = db.rawQuery(query, arrayOf(cleanNumEcon))
+        var vehicle: CompanyVehicleModel? = null
+
+        if (cursor.moveToFirst()) {
+            val nombreIndex = cursor.getColumnIndex("vNombreAfc")
+            val licenciaIndex = cursor.getColumnIndex("vNumlicenciaAfc")
+            val numEconIndex = cursor.getColumnIndex("cNumeconAfi")
+            val placasIndex = cursor.getColumnIndex("vPlacasAfi")
+
+            vehicle = CompanyVehicleModel(
+                vNombreAfc = if (nombreIndex != -1) cursor.getString(nombreIndex) else "",
+                vNumlicenciaAfc = if (licenciaIndex != -1) cursor.getString(licenciaIndex) else "",
+                cNumeconAfi = if (numEconIndex != -1) cursor.getString(numEconIndex) else "",
+                vPlacasAfi = if (placasIndex != -1) cursor.getString(placasIndex) else ""
+            )
+        }
+        cursor.close()
+
+        Log.d("DEBUG_SQLITE", "Resultado de búsqueda para '$cleanNumEcon': ${vehicle != null}")
+        return vehicle
     }
 
     fun insertVehicle(
@@ -91,21 +187,23 @@ class DatabaseHelper(context: Context):SQLiteOpenHelper(context, DATABASE_NAME, 
         dHrsalidaInv: String,
         cCodigoUsu: String,
         cMovimientoInv: String,
-        isSynced: Int
+        isSynced: Int,
+        nKilometraje: Int // <-- 1. PARÁMETRO AGREGADO
     ): Long {
         val db = this.writableDatabase
         val values = ContentValues().apply {
-                put("dIngresoInv", dIngresoInv)
-                put("vNombrechofInv", vNombrechofInv)
-                put("vAcompanianteInv", vAcompanianteInv)
-                put("vEmpresaInv", vEmpresaInv)
-                put("cPlacaInv", cPlacaInv)
-                put("vMotivoInv", vMotivoInv)
-                put("dHringresoInv", dHringresoInv)
-                put("dHrsalidaInv", dHrsalidaInv)
-                put("cCodigoUsu", cCodigoUsu)
-                put("cMovimientoInv", cMovimientoInv)
-                put("isSynced", isSynced)
+            put("dIngresoInv", dIngresoInv)
+            put("vNombrechofInv", vNombrechofInv)
+            put("vAcompanianteInv", vAcompanianteInv)
+            put("vEmpresaInv", vEmpresaInv)
+            put("cPlacaInv", cPlacaInv)
+            put("vMotivoInv", vMotivoInv)
+            put("dHringresoInv", dHringresoInv)
+            put("dHrsalidaInv", dHrsalidaInv)
+            put("cCodigoUsu", cCodigoUsu)
+            put("cMovimientoInv", cMovimientoInv)
+            put("isSynced", isSynced)
+            put("nKilometraje", nKilometraje) // <-- 2. GUARDAR EN LA COLUMNA DE LA TABLA
         }
 
         return db.insert("z_geningresovehiculo", null, values).also {
@@ -340,6 +438,10 @@ class DatabaseHelper(context: Context):SQLiteOpenHelper(context, DATABASE_NAME, 
         try {
             if (cursor.moveToFirst()) {
                 do{
+                    // Extracción explícita del kilometraje
+                    val kilometrajeIndex = cursor.getColumnIndex("nKilometraje")
+                    val nKilometraje = if (kilometrajeIndex != -1) cursor.getInt(kilometrajeIndex) else 0
+
                     val record = RecordModel(
                         controlLog = cursor.getLong(cursor.getColumnIndexOrThrow("controlLog")),
                         dIngresoInv = cursor.getString(cursor.getColumnIndexOrThrow("dIngresoInv")),
@@ -352,7 +454,8 @@ class DatabaseHelper(context: Context):SQLiteOpenHelper(context, DATABASE_NAME, 
                         dHrsalidaInv = cursor.getString(cursor.getColumnIndexOrThrow("dHrsalidaInv")),
                         cCodigoUsu = cursor.getString(cursor.getColumnIndexOrThrow("cCodigoUsu")).uppercase(),
                         cMovimientoInv = cursor.getString(cursor.getColumnIndexOrThrow("cMovimientoInv")),
-                        isSynced = cursor.getInt(cursor.getColumnIndexOrThrow("isSynced"))
+                        isSynced = cursor.getInt(cursor.getColumnIndexOrThrow("isSynced")),
+                        nKilometraje = nKilometraje // <-- ASIGNADO AQUÍ
                     )
                     records.add(record)
                 } while (cursor.moveToNext())
@@ -377,7 +480,8 @@ class DatabaseHelper(context: Context):SQLiteOpenHelper(context, DATABASE_NAME, 
         dHrsalidaInv: String,
         cCodigoUsu: String,
         cMovimientoInv: String,
-        isSynced: Int
+        isSynced: Int,
+        nKilometraje: Int // <-- 1. PARÁMETRO AGREGADO
     ): Int {
         val db = this.writableDatabase
         val values = ContentValues().apply {
@@ -391,18 +495,17 @@ class DatabaseHelper(context: Context):SQLiteOpenHelper(context, DATABASE_NAME, 
             put("dHrsalidaInv", dHrsalidaInv)
             put("cCodigoUsu", cCodigoUsu)
             put("cMovimientoInv", cMovimientoInv)
-            put("isSynced",isSynced)
+            put("isSynced", isSynced)
+            put("nKilometraje", nKilometraje) // <-- 2. GUARDAR EN LA COLUMNA DE LA TABLA
         }
 
-        // Actualiza el registro y devuelve el número de filas afectadas
         return try {
             db.update("z_geningresovehiculo", values, "controlLog = ?", arrayOf(controlLog.toString()))
         } catch (e: Exception) {
-            // Maneja el error adecuadamente
             Log.e("Database Error", "Error updating vehicle: ${e.message}")
-            0 // Retorna 0 o maneja el error según tu lógica
+            0
         } finally {
-            db.close() // Asegúrate de cerrar la base de datos si no se va a usar más
+            db.close()
         }
     }
 

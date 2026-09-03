@@ -13,6 +13,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.AgroberriesMX.accesovehicular.data.local.AccesoVehicularLocalDBService
 import com.AgroberriesMX.accesovehicular.data.network.request.LoginRequest
+import com.AgroberriesMX.accesovehicular.domain.RecordsRepository
 import com.AgroberriesMX.accesovehicular.domain.model.LoginModel
 import com.AgroberriesMX.accesovehicular.domain.model.TokenModel
 import com.AgroberriesMX.accesovehicular.domain.usecase.LoginUseCase
@@ -25,6 +26,7 @@ import javax.inject.Inject
 class LoginViewModel @Inject constructor(
     private val getLoginUseCase: LoginUseCase,
     private val localDBService: AccesoVehicularLocalDBService,
+    private val recordsRepository: RecordsRepository, // <-- AGREGAR ESTA LÍNEA
     private val application: Application
     ) : ViewModel() {
     private var _state = MutableLiveData<LoginState>(LoginState.Waiting)
@@ -42,23 +44,29 @@ class LoginViewModel @Inject constructor(
                     val loginRequest = LoginRequest(userId, password, activeUser, creatorId)
                     val response = getLoginUseCase(loginRequest)
                     if(response != null){
-                        //_state.value = LoginState.Success(response)
-                        val md5Hash = password.toMD5() // Hash de la contraseña ingresada
+                        val md5Hash = password.toMD5()
 
-                        // Como TokenModel solo tiene 'token', no podemos obtener 'vNombreUsu' de 'response' directamente.
-                        // Usaremos userId como nombre de usuario para el LoginModel local.
-                        // Para controlLog, usamos 0L asumiendo que es autogenerado por Room o un valor por defecto.
-                        val controlLogValue = 0L // Si controlLog es @PrimaryKey(autoGenerate = true) en LoginModel (Entidad Room)
-                        val nombreUsuarioParaGuardar = userId // O alguna otra lógica si puedes derivar un nombre
+                        val controlLogValue = 0L
+                        val nombreUsuarioParaGuardar = userId
 
                         val userToSaveLocally = LoginModel(
                             controlLog = controlLogValue,
-                            vNombreUsu = nombreUsuarioParaGuardar, // Usamos el userId o un valor por defecto
-                            cCodigoUsu = userId,                   // Este es el userId que ingresó el usuario
-                            vPasswordUsu = md5Hash                 // Contraseña hasheada para verificación offline
+                            vNombreUsu = nombreUsuarioParaGuardar,
+                            cCodigoUsu = userId,
+                            vPasswordUsu = md5Hash
                         )
 
-                        localDBService.saveUser(userToSaveLocally) // Esto ahora ya no dará error de constructor si LoginModel se llenó bien
+                        localDBService.saveUser(userToSaveLocally)
+
+                        // --- SINCRONIZACIÓN AUTOMÁTICA DE VEHÍCULOS DE LA EMPRESA ---
+                        try {
+                            Log.d("DEBUG_SQLITE", "Iniciando descarga de catálogo de vehículos...")
+                            val vehicles = recordsRepository.getCompanyVehicles()
+                            Log.d("DEBUG_SQLITE", "Catálogo obtenido. Registros descargados: ${vehicles?.size ?: 0}")
+                        } catch (e: Exception) {
+                            Log.e("DEBUG_SQLITE", "Error al sincronizar vehículos: ${e.message}")
+                        }
+                        // -------------------------------------------------------------
 
                         _state.value = LoginState.Success(response)
                     } else {
