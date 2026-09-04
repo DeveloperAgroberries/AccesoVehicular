@@ -13,6 +13,7 @@ import androidx.annotation.RequiresApi
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
 import com.AgroberriesMX.accesovehicular.databinding.FragmentSyncBinding
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 
@@ -116,6 +117,26 @@ class SyncFragment : Fragment() {
             binding.cvSyncRondin.isEnabled = false
             uploadDataRondines()
         }
+
+        // Evento de envío de logs sin alterar el flujo de sesión/token
+        binding.cvSendLogs.setOnClickListener {
+            mostrarDialogoConfirmacionLogs()
+        }
+    }
+
+    private fun mostrarDialogoConfirmacionLogs() {
+        MaterialAlertDialogBuilder(requireContext())
+            .setTitle("Confirmar envío")
+            .setMessage("¿Seguro de enviar los logs de Acceso Vehicular a soporte TI?")
+            .setPositiveButton("Enviar") { dialog, _ ->
+                syncViewModel.enviarLogsDirectoPorCorreo("programador@agroberries.mx")
+                dialog.dismiss()
+            }
+            .setNegativeButton("Cancelar") { dialog, _ ->
+                dialog.dismiss()
+            }
+            .setCancelable(false)
+            .show()
     }
 
     private fun syncData() {

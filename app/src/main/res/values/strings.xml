@@ -62,7 +62,7 @@
     <string name="contact_us_about_fragment">Contactanos</string>
     <string name="mail1_about_fragment">aorozco@agroberries.mx</string>
     <string name="mail2_about_fragment">programador@agroberries.mx</string>
-    <string name="version_about_fragment">Version: 3.0</string>
+    <string name="version_about_fragment">Version: 3.0.1</string>
     <string name="privacy_policies_about_fragment"><a href="https://agroberries.mx/agroweb/PrivacyPolicy/index.html">Políticas de privacidad</a></string>
     <string name="title_activity_login">LoginActivity</string>
 

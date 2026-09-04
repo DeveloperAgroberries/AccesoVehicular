@@ -16,7 +16,7 @@ android {
         //minSdk = 21
         minSdk = 24
         targetSdk = 36
-        versionCode = 19
+        versionCode = 20
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
@@ -32,15 +32,15 @@ android {
             )
 
             resValue("string", "AgroberriesMX", "Agroberries AccesoVehicular MX")
-            //buildConfigField("String", "BASE_URL", "\"http://54.165.41.23:5053/api/AgroAccessApp/\"")
-            buildConfigField("String", "BASE_URL", "\"http://192.168.50.120:5011/api/AgroAccessApp/\"")
+            buildConfigField("String", "BASE_URL", "\"http://54.165.41.23:5053/api/AgroAccessApp/\"")
+            //buildConfigField("String", "BASE_URL", "\"http://192.168.50.120:5011/api/AgroAccessApp/\"")
         }
 
         getByName("debug"){
             isDebuggable = true
             resValue("string", "AgroberriesMX", "[DEBUG]Agroberries AccesoVehicular MX")
-            //buildConfigField("String", "BASE_URL", "\"http://54.165.41.23:5053/api/AgroAccessApp/\"")
-            buildConfigField("String", "BASE_URL", "\"http://192.168.50.120:5011/api/AgroAccessApp/\"")
+            buildConfigField("String", "BASE_URL", "\"http://54.165.41.23:5053/api/AgroAccessApp/\"")
+            //buildConfigField("String", "BASE_URL", "\"http://192.168.50.120:5011/api/AgroAccessApp/\"")
         }
     }
     compileOptions {
@@ -63,6 +63,7 @@ dependencies {
     val daggerHiltVersion = "2.48"
     val retrofitVersion = "2.9.0"
     val okHttpVersion = "4.12.0"
+    val mailerVersion = "1.6.2"
 
     //NavComponent
     implementation("androidx.navigation:navigation-fragment-ktx:$navVersion")
@@ -92,6 +93,10 @@ dependencies {
     implementation ("com.google.zxing:core:3.5.3") // La librería core de Zxing
     // Si aún no tienes Material Design, ya que TextInputEditText lo usa
     implementation ("com.google.android.material:material:1.12.0") // Usa la versión más reciente
+
+    //Mailer
+    implementation("com.sun.mail:android-mail:${mailerVersion}")
+    implementation("com.sun.mail:android-activation:${mailerVersion}")
 
 
     implementation("androidx.core:core-ktx:1.15.0")

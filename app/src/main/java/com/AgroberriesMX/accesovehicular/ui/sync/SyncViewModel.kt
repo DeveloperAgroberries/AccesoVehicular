@@ -8,7 +8,8 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.AgroberriesMX.accesovehicular.data.local.AccesoVehicularLocalDBService
-import com.AgroberriesMX.accesovehicular.data.network.request.RondinListWrapper
+import com.AgroberriesMX.accesovehicular.data.local.DatabaseHelper
+import com.AgroberriesMX.accesovehicular.data.mailer.AutoMailer
 import com.AgroberriesMX.accesovehicular.data.network.request.SyncRequest
 import com.AgroberriesMX.accesovehicular.domain.RecordsRepository
 import com.AgroberriesMX.accesovehicular.domain.model.CompanyVehicleModel
@@ -17,27 +18,31 @@ import com.AgroberriesMX.accesovehicular.domain.model.FormattedRondinModel
 import com.AgroberriesMX.accesovehicular.domain.model.LoginModel
 import com.AgroberriesMX.accesovehicular.domain.model.RecordModel
 import com.AgroberriesMX.accesovehicular.domain.model.RondinModel
-import com.AgroberriesMX.accesovehicular.domain.usecase.GetCompanyVehiclesUseCase // Asegúrate de importar tu UseCase
+import com.AgroberriesMX.accesovehicular.domain.usecase.GetCompanyVehiclesUseCase
 import com.AgroberriesMX.accesovehicular.domain.usecase.LoginsUseCase
 import com.AgroberriesMX.accesovehicular.domain.usecase.UploadUseCase
 import com.AgroberriesMX.accesovehicular.domain.usecase.UploadUseCaseRondin
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
+import java.text.SimpleDateFormat
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.LocalTime
 import java.time.format.DateTimeFormatter
-import java.time.format.DateTimeParseException
+import java.util.Date
+import java.util.Locale
 import javax.inject.Inject
 
 @HiltViewModel
 class SyncViewModel @Inject constructor(
     private val loginsUseCase: LoginsUseCase,
-    private val companyVehiclesUseCase: GetCompanyVehiclesUseCase, // INYECTADO AQUÍ
+    private val companyVehiclesUseCase: GetCompanyVehiclesUseCase,
     private val uploadUseCase: UploadUseCase,
     private val UploadUseCaseRondin: UploadUseCaseRondin,
     private val databaseService: AccesoVehicularLocalDBService,
-    private val repository: RecordsRepository
+    private val repository: RecordsRepository,
+    private val dbHelper: DatabaseHelper,
+    private val autoMailer: AutoMailer
 ) : ViewModel() {
 
     private var _state = MutableLiveData<SyncState>(SyncState.Waiting)
@@ -140,7 +145,7 @@ class SyncViewModel @Inject constructor(
                             cCodigoUsu = register.cCodigoUsu,
                             dCreacionInv = LocalDateTime.now().toString(),
                             cMovimientoInv = cMovimientoInv,
-                            nKilometrajeInv = register.nKilometraje // <-- LÍNEA AGREGADA
+                            nKilometrajeInv = register.nKilometraje
                         )
                     }
                     val response = uploadUseCase(transformedData)
@@ -233,6 +238,72 @@ class SyncViewModel @Inject constructor(
             val rondines = repository.listUnsynchronizedRondines()
             _pendingRondines.value = rondines ?: emptyList()
         }
+    }
+
+    // ENVÍO DE LOGS DE ACCESO VEHICULAR (z_geningresovehiculo)
+    fun enviarLogsDirectoPorCorreo(correoDestino: String = "programador@agroberries.mx") {
+        val logsTexto = generarTextoLogsAccesoVehicular()
+        val asunto = "Logs Acceso Vehicular - Dispositivo ${Build.MODEL}"
+
+        val timeStamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(Date())
+        val nombreArchivo = "logs_z_geningresovehiculo_$timeStamp.txt"
+
+        autoMailer.sendEmailWithAttachmentInBackground(
+            toEmail = correoDestino,
+            subject = asunto,
+            bodyText = "Se adjunta el reporte de logs de la tabla z_geningresovehiculo generado desde el dispositivo ${Build.MODEL}.",
+            attachmentContent = logsTexto,
+            fileName = nombreArchivo
+        )
+
+        _state.postValue(SyncState.UploadSuccess("Logs enviados correctamente en archivo .txt."))
+    }
+
+    private fun generarTextoLogsAccesoVehicular(): String {
+        val builder = StringBuilder()
+        val fechaActual = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).format(Date())
+
+        builder.append("=== LOGS ACCESO VEHICULAR (z_geningresovehiculo) ===\n")
+        builder.append("Fecha del reporte: $fechaActual\n")
+        builder.append("Modelo dispositivo: ${Build.MODEL}\n\n")
+
+        try {
+            val db = dbHelper.readableDatabase
+            val cursor = db.rawQuery("SELECT * FROM z_geningresovehiculo", null)
+
+            if (cursor.moveToFirst()) {
+                do {
+                    val controlLog = cursor.getLong(cursor.getColumnIndexOrThrow("controlLog"))
+                    val dIngresoInv = cursor.getString(cursor.getColumnIndexOrThrow("dIngresoInv"))
+                    val vNombrechofInv = cursor.getString(cursor.getColumnIndexOrThrow("vNombrechofInv"))
+                    val vAcompanianteInv = cursor.getString(cursor.getColumnIndexOrThrow("vAcompanianteInv"))
+                    val vEmpresaInv = cursor.getString(cursor.getColumnIndexOrThrow("vEmpresaInv"))
+                    val cPlacaInv = cursor.getString(cursor.getColumnIndexOrThrow("cPlacaInv"))
+                    val vMotivoInv = cursor.getString(cursor.getColumnIndexOrThrow("vMotivoInv"))
+                    val dHringresoInv = cursor.getString(cursor.getColumnIndexOrThrow("dHringresoInv"))
+                    val dHrsalidaInv = cursor.getString(cursor.getColumnIndexOrThrow("dHrsalidaInv"))
+                    val cCodigoUsu = cursor.getString(cursor.getColumnIndexOrThrow("cCodigoUsu"))
+                    val cMovimientoInv = cursor.getString(cursor.getColumnIndexOrThrow("cMovimientoInv"))
+                    val isSynced = cursor.getInt(cursor.getColumnIndexOrThrow("isSynced"))
+
+                    val kmIdx = cursor.getColumnIndex("nKilometraje")
+                    val nKilometraje = if (kmIdx != -1) cursor.getInt(kmIdx) else 0
+
+                    builder.append("LogID: $controlLog | Placa: $cPlacaInv | Chofer: $vNombrechofInv | Empresa: $vEmpresaInv\n")
+                    builder.append("Fecha Ingreso: $dIngresoInv | Hr Ingreso: $dHringresoInv | Hr Salida: $dHrsalidaInv\n")
+                    builder.append("Acompañante: $vAcompanianteInv | Motivo: $vMotivoInv | Movimiento: $cMovimientoInv\n")
+                    builder.append("Usuario: $cCodigoUsu | Sincronizado: $isSynced | Kilometraje: $nKilometraje\n")
+                    builder.append("---------------------------------------------------\n")
+                } while (cursor.moveToNext())
+            } else {
+                builder.append("No hay registros almacenados en z_geningresovehiculo.\n")
+            }
+            cursor.close()
+        } catch (e: Exception) {
+            builder.append("Error al leer la base de datos local: ${e.message}\n")
+        }
+
+        return builder.toString()
     }
 
     fun clearState() {
